@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import PdfViewer from '../components/PdfViewer';
 import ProgressDashboard from '../components/ProgressDashboard';
 import ChatDock from '../components/ChatDock';
+import YouTubeCards from '../components/YouTubeCards';
 import axios from 'axios';
 
 export default function PdfDetail() {
@@ -10,6 +11,7 @@ export default function PdfDetail() {
   const [pdf, setPdf] = useState(null);
   const [error, setError] = useState(null);
   const [scrollToPage, setScrollToPage] = useState(null);
+  const [videos, setVideos] = useState([]);
   const viewerRef = useRef();
 
   useEffect(() => {
@@ -18,6 +20,14 @@ export default function PdfDetail() {
       setPdf(found);
     }).catch(() => setError('PDF not found'));
   }, [id]);
+
+  useEffect(() => {
+    if (pdf?.title) {
+      axios.get('/api/youtube/search', { params: { q: pdf.title } })
+        .then(res => setVideos(res.data))
+        .catch(() => setVideos([]));
+    }
+  }, [pdf]);
 
   if (error) return <div className="p-8">{error}</div>;
   if (!pdf) return <div className="p-8">Loading PDF...</div>;
@@ -47,6 +57,7 @@ export default function PdfDetail() {
       </div>
       <ProgressDashboard stats={stats} />
       <ChatDock pdfId={id} onCitationClick={page => setScrollToPage(page)} />
+      <YouTubeCards videos={videos} />
     </div>
   );
 }

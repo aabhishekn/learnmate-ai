@@ -8,6 +8,7 @@ import { createQuiz } from '../controllers/quizController.js';
 import { submitAttempt } from '../controllers/attemptController.js';
 import { getProgress } from '../controllers/progressController.js';
 import { chatAsk } from '../controllers/chatController.js';
+import { youtubeSearch } from '../controllers/youtubeController.js';
 
 const router = express.Router();
 
@@ -46,5 +47,8 @@ router.get('/progress', getProgress);
 
 // Chat dock RAG answer
 router.post('/chat/ask', chatAsk);
+
+// YouTube topic search
+router.get('/youtube/search', youtubeSearch);
 
 export default router;
