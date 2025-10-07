@@ -6,6 +6,7 @@ import { ingestPdf } from '../controllers/ingestController.js';
 import { ragQuery } from '../controllers/ragController.js';
 import { createQuiz } from '../controllers/quizController.js';
 import { submitAttempt } from '../controllers/attemptController.js';
+import { getProgress } from '../controllers/progressController.js';
 
 const router = express.Router();
 
@@ -38,5 +39,8 @@ router.post('/quiz/create', createQuiz);
 
 // Quiz attempt
 router.post('/quiz/attempt', submitAttempt);
+
+// Progress dashboard
+router.get('/progress', getProgress);
 
 export default router;
