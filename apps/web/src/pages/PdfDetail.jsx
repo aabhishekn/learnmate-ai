@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import PdfViewer from '../components/PdfViewer';
 import ProgressDashboard from '../components/ProgressDashboard';
+import ChatDock from '../components/ChatDock';
 import axios from 'axios';
 
 export default function PdfDetail() {
   const { id } = useParams();
   const [pdf, setPdf] = useState(null);
   const [error, setError] = useState(null);
+  const [scrollToPage, setScrollToPage] = useState(null);
+  const viewerRef = useRef();
 
   useEffect(() => {
     axios.get('/api/pdfs').then(res => {
@@ -40,9 +43,10 @@ export default function PdfDetail() {
     <div className="p-8 max-w-4xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4">{pdf.title}</h2>
       <div className="bg-white rounded shadow p-4 mb-6">
-        <PdfViewer url={url} />
+        <PdfViewer url={url} scrollToPage={scrollToPage} ref={viewerRef} />
       </div>
       <ProgressDashboard stats={stats} />
+      <ChatDock pdfId={id} onCitationClick={page => setScrollToPage(page)} />
     </div>
   );
 }
