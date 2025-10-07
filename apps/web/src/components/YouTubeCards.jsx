@@ -9,7 +9,7 @@ export default function YouTubeCards({ videos }) {
           href={`https://youtube.com/watch?v=${v.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="block bg-white rounded shadow hover:shadow-lg transition p-3 flex gap-3 items-center"
+          className="bg-white rounded shadow hover:shadow-lg transition p-3 flex gap-3 items-center"
         >
           <img src={v.thumbnail} alt={v.title} className="w-24 h-16 object-cover rounded" />
           <div className="flex-1">
