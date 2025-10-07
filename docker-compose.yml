@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+  chroma:
+    image: chromadb/chroma:latest
+    restart: always
+    ports:
+      - 8000:8000
+  server:
+    build: ./apps/server
+    restart: always
+    ports:
+      - 4000:4000
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - chroma
+    volumes:
+      - ./apps/server/uploads:/app/uploads
+      - ./apps/server/public/pdfs:/app/public/pdfs
+  web:
+    build: ./apps/web
+    restart: always
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - server
+volumes:
+  mongo-data:
