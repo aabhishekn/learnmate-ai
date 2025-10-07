@@ -5,6 +5,7 @@ import Pdf from '../models/Pdf.js';
 import { ingestPdf } from '../controllers/ingestController.js';
 import { ragQuery } from '../controllers/ragController.js';
 import { createQuiz } from '../controllers/quizController.js';
+import { submitAttempt } from '../controllers/attemptController.js';
 
 const router = express.Router();
 
@@ -34,5 +35,8 @@ router.post('/rag', ragQuery);
 
 // Quiz generation
 router.post('/quiz/create', createQuiz);
+
+// Quiz attempt
+router.post('/quiz/attempt', submitAttempt);
 
 export default router;
