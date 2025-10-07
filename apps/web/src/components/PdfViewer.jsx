@@ -45,22 +45,24 @@ export default function PdfViewer({ url, initialPage = 1, onPageChange, scrollTo
   }, [scrollToPage, pdf]);
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center w-full">
-      {loading && <div className="text-gray-500">Loading PDF...</div>}
-      <canvas ref={canvasRef} className="rounded shadow mb-2" />
+    <div ref={containerRef} className="flex flex-col items-center w-full max-w-full">
+      {loading && <div className="text-gray-500 animate-pulse">Loading PDF...</div>}
+      <canvas ref={canvasRef} className="rounded shadow mb-2 max-w-full focus:outline-none focus:ring-2 focus:ring-indigo-400" tabIndex={0} />
       <div className="flex gap-2 items-center mt-2">
         <button
-          className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page <= 1}
+          aria-label="Previous page"
         >
           Prev
         </button>
         <span className="text-sm">Page {page} / {numPages}</span>
         <button
-          className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           onClick={() => setPage(p => Math.min(numPages, p + 1))}
           disabled={page >= numPages}
+          aria-label="Next page"
         >
           Next
         </button>

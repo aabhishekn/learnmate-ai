@@ -31,12 +31,16 @@ export default function ChatDock({ pdfId, onCitationClick }) {
   };
 
   return (
-    <div className="bg-white rounded shadow p-4 mt-6">
+    <div className="bg-white rounded shadow p-4 mt-6 max-w-full">
       <h3 className="text-lg font-semibold mb-2">Chat with your PDF</h3>
       <div className="h-48 overflow-y-auto mb-2 border rounded p-2 bg-gray-50">
         {messages.map((msg, i) => (
           <div key={i} className={`mb-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <div className={`inline-block px-3 py-2 rounded-lg ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            <div
+              className={`inline-block px-3 py-2 rounded-lg ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+              tabIndex={0}
+              aria-label={msg.role === 'user' ? 'User message' : 'Assistant message'}
+            >
               {msg.content}
             </div>
             {msg.citations && (
@@ -49,7 +53,7 @@ export default function ChatDock({ pdfId, onCitationClick }) {
           </div>
         ))}
       </div>
-      <form onSubmit={sendMessage} className="flex gap-2">
+      <form onSubmit={sendMessage} className="flex gap-2" aria-label="Chat input form">
         <input
           ref={inputRef}
           className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
@@ -57,11 +61,13 @@ export default function ChatDock({ pdfId, onCitationClick }) {
           value={input}
           onChange={e => setInput(e.target.value)}
           disabled={loading}
+          aria-label="Chat input"
         />
         <button
           type="submit"
-          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-indigo-400"
           disabled={loading}
+          aria-label="Send message"
         >
           Send
         </button>
