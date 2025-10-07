@@ -6,7 +6,9 @@ import session from 'express-session';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 import { connectDB } from './db.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use(
   })
 );
 
+
+app.use('/api/auth', authRoutes);
 app.use('/pdfs', express.static(path.join(__dirname, '../public/pdfs')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
