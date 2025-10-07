@@ -1,3 +1,4 @@
+require('dotenv').config();
 // @ts-check
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
