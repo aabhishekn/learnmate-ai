@@ -8,7 +8,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { connectDB } from './db.js';
+
 import authRoutes from './routes/auth.js';
+import pdfsRoutes from './routes/pdfs.js';
 
 dotenv.config();
 
@@ -36,6 +38,7 @@ app.use(
 
 
 app.use('/api/auth', authRoutes);
+app.use('/api', pdfsRoutes);
 app.use('/pdfs', express.static(path.join(__dirname, '../public/pdfs')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
