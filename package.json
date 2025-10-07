@@ -1,0 +1,27 @@
+{
+  "name": "learnmate-ai",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/server",
+    "packages/lib"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:web dev:server",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:server": "npm --workspace apps/server run dev",
+    "lint": "npm-run-all lint:web lint:server",
+    "lint:web": "npm --workspace apps/web run lint",
+    "lint:server": "npm --workspace apps/server run lint",
+    "test": "npm-run-all test:web test:server",
+    "test:web": "npm --workspace apps/web run test",
+    "test:server": "npm --workspace apps/server run test"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "npm-run-all": "^4.1.5"
+  }
+}

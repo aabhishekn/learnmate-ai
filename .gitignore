@@ -1,0 +1,45 @@
+# Node
+node_modules/
+.env*
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite
+apps/web/dist/
+apps/web/.vite/
+
+# Server
+apps/server/uploads/
+apps/server/coverage/
+apps/server/.env*
+
+# Coverage
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Misc
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# VSCode
+.vscode/
+
+# Test
+apps/web/coverage/
+
+# Docker
+*.pid
+docker-data/
+
+# PDF Placeholders
+apps/server/public/pdfs/*.pdf
+!apps/server/public/pdfs/README.md
