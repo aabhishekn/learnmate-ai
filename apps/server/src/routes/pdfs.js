@@ -3,6 +3,7 @@ import { upload } from '../middleware/upload.js';
 
 import { uploadPdf } from '../controllers/pdfController.js';
 import Pdf from '../models/Pdf.js';
+import { ingestPdf } from '../controllers/ingestController.js';
 
 const router = express.Router();
 
@@ -24,5 +25,8 @@ router.get('/pdfs', async (req, res, next) => {
 });
 
 router.post('/upload', upload.single('pdf'), uploadPdf);
+
+// Ingest PDF (extract, chunk, embed)
+router.post('/ingest', ingestPdf);
 
 export default router;
