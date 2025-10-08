@@ -1,10 +1,11 @@
 import chromaClient from '../../chromaClient.js';
-import { OpenAIEmbeddings } from '@langchain/openai';
+import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const embeddings = new OpenAIEmbeddings({
-  openAIApiKey: process.env.OPENAI_API_KEY,
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: process.env.HF_API_KEY, // Optional: Hugging Face Inference API key
+  model: 'sentence-transformers/all-MiniLM-L6-v2',
 });
 
 export async function embedChunks(pdfId, chunks) {
@@ -20,9 +21,6 @@ export async function embedChunks(pdfId, chunks) {
     metadata: { page: chunks[i].page },
     document: text,
   }));
-  await chromaClient.addDocuments(
-    collection.id || collection.collection?.id,
-    docs
-  );
+  await chromaClient.addDocuments(collection, docs);
   return docs.map((d) => d.id);
 }

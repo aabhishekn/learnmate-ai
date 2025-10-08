@@ -1,10 +1,14 @@
-import { OpenAIEmbeddings } from '@langchain/openai';
+// Check for any other OpenAI completions usage missing the model parameter
+// Ensure that the model parameter is included where necessary
+
+import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { cosineSimilarity } from 'langchain/util/math';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const embeddings = new OpenAIEmbeddings({
-  openAIApiKey: process.env.OPENAI_API_KEY,
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: process.env.HF_API_KEY, // Optional: Hugging Face Inference API key
+  model: 'sentence-transformers/all-MiniLM-L6-v2',
 });
 
 export async function gradeAttempt(quiz, responses) {

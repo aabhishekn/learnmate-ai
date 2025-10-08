@@ -12,19 +12,22 @@ export default function PdfDetail() {
   const [error, setError] = useState(null);
   const [scrollToPage, setScrollToPage] = useState(null);
   const [videos, setVideos] = useState([]);
-  const viewerRef = useRef();
 
   useEffect(() => {
-    axios.get('/api/pdfs').then(res => {
-      const found = res.data.find(p => p.id === id);
-      setPdf(found);
-    }).catch(() => setError('PDF not found'));
+    axios
+      .get('/api/pdfs')
+      .then((res) => {
+        const found = res.data.find((p) => p.id === id);
+        setPdf(found);
+      })
+      .catch(() => setError('PDF not found'));
   }, [id]);
 
   useEffect(() => {
     if (pdf?.title) {
-      axios.get('/api/youtube/search', { params: { q: pdf.title } })
-        .then(res => setVideos(res.data))
+      axios
+        .get('/api/youtube/search', { params: { q: pdf.title } })
+        .then((res) => setVideos(res.data))
         .catch(() => setVideos([]));
     }
   }, [pdf]);
@@ -53,10 +56,10 @@ export default function PdfDetail() {
     <div className="p-8 max-w-4xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4">{pdf.title}</h2>
       <div className="bg-white rounded shadow p-4 mb-6">
-        <PdfViewer url={url} scrollToPage={scrollToPage} ref={viewerRef} />
+        <PdfViewer url={url} scrollToPage={scrollToPage} />
       </div>
       <ProgressDashboard stats={stats} />
-      <ChatDock pdfId={id} onCitationClick={page => setScrollToPage(page)} />
+      <ChatDock pdfId={id} onCitationClick={(page) => setScrollToPage(page)} />
       <YouTubeCards videos={videos} />
     </div>
   );

@@ -2,32 +2,39 @@
 // Simple ChromaDB REST API client using axios
 // Update CHROMA_API_URL if needed (default: Docker Compose chroma service)
 
-import axios from 'axios';
+// ChromaDB JS client integration
+import { ChromaClient } from 'chromadb';
 
-const CHROMA_API_URL = process.env.CHROMA_API_URL || 'http://localhost:8000';
+const client = new ChromaClient({
+  path: process.env.CHROMA_URL || 'http://localhost:8000',
+});
 
 const chromaClient = {
   async createCollection(name) {
-    const res = await axios.post(`${CHROMA_API_URL}/api/v1/collections`, {
-      name,
+    // Will create or get existing collection
+    return await client.getOrCreateCollection({ name });
+  },
+  async addDocuments(collection, documents) {
+    // collection: Chroma collection object
+    // documents: [{id, embedding, metadata, document}]
+    // Chroma expects: ids, embeddings, metadatas, documents arrays
+    const ids = documents.map((d) => d.id);
+    const embeddings = documents.map((d) => d.embedding);
+    const metadatas = documents.map((d) => d.metadata);
+    const docs = documents.map((d) => d.document);
+    return await collection.add({
+      ids,
+      embeddings,
+      metadatas,
+      documents: docs,
     });
-    return res.data;
   },
-
-  async addDocuments(collectionId, documents) {
-    const res = await axios.post(
-      `${CHROMA_API_URL}/api/v1/collections/${collectionId}/documents`,
-      { documents }
-    );
-    return res.data;
-  },
-
-  async queryCollection(collectionId, query) {
-    const res = await axios.post(
-      `${CHROMA_API_URL}/api/v1/collections/${collectionId}/query`,
-      query
-    );
-    return res.data;
+  async queryCollection(collection, query) {
+    // query: { queryEmbeddings: [[...]], nResults }
+    return await collection.query({
+      queryEmbeddings: query.queryEmbeddings,
+      nResults: query.nResults,
+    });
   },
 };
 
