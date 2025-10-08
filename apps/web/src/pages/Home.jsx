@@ -15,7 +15,7 @@ export default function Home() {
       </p>
       <div className="flex gap-4">
         <a
-          href="/pdfs"
+          href="/pdfs?guest=1"
           className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
         >
           Try as Guest

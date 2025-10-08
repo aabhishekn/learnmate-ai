@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import PdfSourceSelector from '../components/PdfSourceSelector';
 import { usePdfs } from '../hooks/usePdfs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Pdfs() {
   const { pdfs, isLoading, uploadPdf, uploading } = usePdfs();
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isGuest = new URLSearchParams(location.search).get('guest') === '1';
 
   const handleUpload = async (file) => {
     try {
@@ -32,6 +34,12 @@ export default function Pdfs() {
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4">PDFs</h2>
+      {isGuest && (
+        <div className="mb-4 px-4 py-2 rounded shadow bg-yellow-100 text-yellow-800 border border-yellow-300">
+          <b>Guest Mode:</b> You are using Learnmate AI as a guest. Sign up to
+          save your progress and unlock all features.
+        </div>
+      )}
       {toast && (
         <div
           className={`mb-4 px-4 py-2 rounded shadow text-white ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}
