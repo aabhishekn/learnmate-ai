@@ -7,11 +7,31 @@ export default function Pdfs() {
   const { pdfs, isLoading, uploadPdf, uploading } = usePdfs();
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [guestPdfs, setGuestPdfs] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const isGuest = new URLSearchParams(location.search).get('guest') === '1';
 
   const handleUpload = async (file) => {
+    if (isGuest) {
+      // Store guest uploads in local state only
+      const url = URL.createObjectURL(file);
+      setGuestPdfs((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-${Math.random()}`,
+          title: file.name.replace(/\.pdf$/i, ''),
+          filename: file.name,
+          url,
+        },
+      ]);
+      setToast({
+        type: 'success',
+        msg: 'Upload successful (guest session only)!',
+      });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
     try {
       await uploadPdf(file);
       setSelectedId(null);
@@ -48,7 +68,7 @@ export default function Pdfs() {
         </div>
       )}
       <PdfSourceSelector
-        pdfs={pdfs}
+        pdfs={isGuest ? guestPdfs : pdfs}
         uploading={uploading}
         selectedId={selectedId}
         onSelect={handleSelect}
