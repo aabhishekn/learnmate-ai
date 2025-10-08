@@ -13,13 +13,12 @@ export default function Home() {
         your progress, and chat with your study material. Powered by AI,
         optimized for learning.
       </p>
-
       <div className="flex gap-4">
         <a
           href="/pdfs"
           className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
         >
-          Upload or Choose Sample
+          Try as Guest
         </a>
         <button
           className="px-6 py-3 bg-white border border-indigo-600 text-indigo-700 rounded-lg shadow hover:bg-indigo-50 transition"
@@ -40,7 +39,6 @@ export default function Home() {
           Sign Up
         </button>
       </div>
-
       {showAuth && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-200"
@@ -49,12 +47,11 @@ export default function Home() {
             backdropFilter: 'blur(8px)',
           }}
         >
-          {/* Square Modal */}
           <div
             className="relative animate-fadeInUp flex flex-col items-center justify-center"
             style={{
               width: 'min(90vw, 400px)',
-              height: 'min(90vw, 400px)', // perfect square
+              height: 'min(90vw, 400px)',
               borderRadius: '1.75rem',
               background: 'rgba(255,255,255,0.82)',
               boxShadow:
@@ -92,18 +89,10 @@ export default function Home() {
                 &times;
               </span>
             </button>
-
-            {/* Centered form */}
-            <div
-              style={{
-                width: '100%',
-                maxWidth: '320px',
-              }}
-            >
+            <div style={{ width: '100%', maxWidth: '320px' }}>
               <AuthForm initialMode={authMode} />
             </div>
           </div>
-
           <style>{`
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(40px); }
