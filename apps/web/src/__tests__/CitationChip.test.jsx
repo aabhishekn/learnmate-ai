@@ -1,4 +1,7 @@
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+
+import { test, expect } from 'vitest';
 import CitationChip from '../components/CitationChip';
 
 test('renders citation chip and handles click', () => {

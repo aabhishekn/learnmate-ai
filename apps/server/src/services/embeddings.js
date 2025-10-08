@@ -1,22 +1,28 @@
-import { ChromaClient } from 'chroma-client';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
+import chromaClient from '../../chromaClient.js';
+import { OpenAIEmbeddings } from '@langchain/openai';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chroma = new ChromaClient({ baseUrl: process.env.CHROMA_URL });
-const embeddings = new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY });
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function embedChunks(pdfId, chunks) {
   // Create collection if not exists
   const collectionName = `pdf_${pdfId}`;
-  let collection = await chroma.getOrCreateCollection({ name: collectionName });
-  const texts = chunks.map(c => c.text);
+  let collection = await chromaClient.createCollection(collectionName);
+  const texts = chunks.map((c) => c.text);
   const vectors = await embeddings.embedDocuments(texts);
-  const ids = await collection.add({
-    ids: chunks.map((c, i) => `${pdfId}_${c.page}_${i}`),
-    embeddings: vectors,
-    metadatas: chunks.map(c => ({ page: c.page })),
-    documents: texts,
-  });
-  return ids;
+  // Prepare documents for Chroma REST API
+  const docs = texts.map((text, i) => ({
+    id: `${pdfId}_${chunks[i].page}_${i}`,
+    embedding: vectors[i],
+    metadata: { page: chunks[i].page },
+    document: text,
+  }));
+  await chromaClient.addDocuments(
+    collection.id || collection.collection?.id,
+    docs
+  );
+  return docs.map((d) => d.id);
 }

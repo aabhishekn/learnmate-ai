@@ -1,9 +1,11 @@
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
+import { OpenAIEmbeddings } from '@langchain/openai';
 import { cosineSimilarity } from 'langchain/util/math';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const embeddings = new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY });
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function gradeAttempt(quiz, responses) {
   let correct = 0;
