@@ -7,24 +7,59 @@ export default function Pdfs() {
   const { pdfs, isLoading, uploadPdf, uploading } = usePdfs();
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
-  const [guestPdfs, setGuestPdfs] = useState([]);
+  // Use a session ID to isolate guest uploads per session/browser tab
+  const [sessionId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      let sid = sessionStorage.getItem('guestSessionId');
+      if (!sid) {
+        sid = `${Date.now()}-${Math.random()}`;
+        sessionStorage.setItem('guestSessionId', sid);
+      }
+      return sid;
+    }
+    return null;
+  });
+  // Only show guest PDFs for this session
+  const [guestPdfs, setGuestPdfs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('guestPdfs');
+        const all = stored ? JSON.parse(stored) : [];
+        return all.filter((p) => p.sessionId === sessionId);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const isGuest = new URLSearchParams(location.search).get('guest') === '1';
 
   const handleUpload = async (file) => {
     if (isGuest) {
-      // Store guest uploads in local state only
+      // Store guest uploads in local state and persist to localStorage, tagged with sessionId
       const url = URL.createObjectURL(file);
-      setGuestPdfs((prev) => [
-        ...prev,
-        {
+      setGuestPdfs((prev) => {
+        const newPdf = {
           id: `${Date.now()}-${Math.random()}`,
           title: file.name.replace(/\.pdf$/i, ''),
           filename: file.name,
           url,
-        },
-      ]);
+          sessionId,
+        };
+        // Save all guest PDFs in localStorage, but only show those for this session
+        let all = [];
+        try {
+          const stored = localStorage.getItem('guestPdfs');
+          all = stored ? JSON.parse(stored) : [];
+        } catch {}
+        const updatedAll = [...all, newPdf];
+        try {
+          localStorage.setItem('guestPdfs', JSON.stringify(updatedAll));
+        } catch {}
+        return [...prev, newPdf];
+      });
       setToast({
         type: 'success',
         msg: 'Upload successful (guest session only)!',
@@ -48,11 +83,23 @@ export default function Pdfs() {
   // When a PDF is selected, navigate to its detail page
   const handleSelect = (id) => {
     setSelectedId(id);
-    if (id) navigate(`/pdfs/${id}`);
+    if (id) {
+      if (isGuest) {
+        navigate(`/pdfs/${id}?guest=1`);
+      } else {
+        navigate(`/pdfs/${id}`);
+      }
+    }
   };
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto">
+      <button
+        className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700 transition"
+        onClick={() => navigate(isGuest ? '/?guest=1' : '/')}
+      >
+        Back to Home
+      </button>
       <h2 className="text-2xl font-semibold mb-4">PDFs</h2>
       {isGuest && (
         <div className="mb-4 px-4 py-2 rounded shadow bg-yellow-100 text-yellow-800 border border-yellow-300">

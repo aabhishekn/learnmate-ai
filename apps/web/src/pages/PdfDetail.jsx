@@ -1,19 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import PdfViewer from '../components/PdfViewer';
 import ProgressDashboard from '../components/ProgressDashboard';
 import ChatDock from '../components/ChatDock';
 import YouTubeCards from '../components/YouTubeCards';
 import axios from 'axios';
 
-export default function PdfDetail() {
+function PdfDetail() {
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isGuest = new URLSearchParams(location.search).get('guest') === '1';
   const [pdf, setPdf] = useState(null);
   const [error, setError] = useState(null);
   const [scrollToPage, setScrollToPage] = useState(null);
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
+    if (isGuest) {
+      // Get guest PDFs from localStorage
+      let guestPdfs = [];
+      try {
+        const stored = localStorage.getItem('guestPdfs');
+        guestPdfs = stored ? JSON.parse(stored) : [];
+      } catch {}
+      const found = guestPdfs.find((p) => p.id === id);
+      console.log('[PdfDetail] Guest mode:', { id, found, guestPdfs });
+      if (found) setPdf(found);
+      else setError('PDF not found (guest session)');
+      return;
+    }
     axios
       .get('/api/pdfs')
       .then((res) => {
@@ -21,7 +37,7 @@ export default function PdfDetail() {
         setPdf(found);
       })
       .catch(() => setError('PDF not found'));
-  }, [id]);
+  }, [id, isGuest]);
 
   useEffect(() => {
     if (pdf?.title) {
@@ -32,10 +48,28 @@ export default function PdfDetail() {
     }
   }, [pdf]);
 
-  if (error) return <div className="p-8">{error}</div>;
-  if (!pdf) return <div className="p-8">Loading PDF...</div>;
+  if (error) {
+    return (
+      <div className="p-8 flex flex-col items-center gap-4">
+        <div className="text-red-600 text-lg font-semibold">{error}</div>
+        <button
+          className="px-4 py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700 transition"
+          onClick={() => navigate(isGuest ? `/pdfs?guest=1` : '/pdfs')}
+        >
+          Back to PDFs
+        </button>
+      </div>
+    );
+  }
+  if (!pdf) {
+    return <div className="p-8">Loading PDF...</div>;
+  }
 
-  const url = `/uploads/${pdf.filename}`;
+  // For guest, use the blob URL; for signed-in, use backend URL
+  const url = isGuest && pdf.url ? pdf.url : `/uploads/${pdf.filename}`;
+  if (isGuest) {
+    console.log('[PdfDetail] Using PDF url for guest:', url, pdf);
+  }
 
   // TODO: Replace with real stats from useProgress
   const stats = {
@@ -54,6 +88,12 @@ export default function PdfDetail() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
+      <button
+        className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700 transition"
+        onClick={() => navigate(isGuest ? '/pdfs?guest=1' : '/pdfs')}
+      >
+        Back to PDFs
+      </button>
       <h2 className="text-2xl font-semibold mb-4">{pdf.title}</h2>
       <div className="bg-white rounded shadow p-4 mb-6">
         <PdfViewer url={url} scrollToPage={scrollToPage} />
@@ -64,3 +104,5 @@ export default function PdfDetail() {
     </div>
   );
 }
+
+export default PdfDetail;
