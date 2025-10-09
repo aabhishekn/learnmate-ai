@@ -65,10 +65,42 @@ function PdfDetail() {
     return <div className="p-8">Loading PDF...</div>;
   }
 
-  // For guest, use the blob URL; for signed-in, use backend URL
-  const url = isGuest && pdf.url ? pdf.url : `/uploads/${pdf.filename}`;
-  if (isGuest) {
-    console.log('[PdfDetail] Using PDF url for guest:', url, pdf);
+  // For guest, reconstruct blob URL from base64 if present; for signed-in, use backend URL
+  let url = '';
+  if (isGuest && pdf) {
+    let debugInfo = {};
+    if (pdf.base64) {
+      try {
+        const arr = pdf.base64.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        url = URL.createObjectURL(blob);
+        debugInfo = {
+          mime,
+          byteLength: u8arr.length,
+          blobSize: blob.size,
+          url,
+          base64Prefix: pdf.base64.slice(0, 40) + '...',
+        };
+      } catch (err) {
+        url = pdf.url || '';
+        debugInfo = { error: err && err.message, pdf, url };
+      }
+    } else {
+      url = pdf.url || '';
+      debugInfo = { fallback: true, pdf, url };
+    }
+    console.log('[PdfDetail] Using PDF url for guest:', url, pdf, debugInfo);
+    // Debug output in UI for troubleshooting
+    window._pdfDetailDebug = { pdf, url, debugInfo };
+  } else if (pdf) {
+    url = `/uploads/${pdf.filename}`;
   }
 
   // TODO: Replace with real stats from useProgress

@@ -19,13 +19,34 @@ export default function Pdfs() {
     }
     return null;
   });
-  // Only show guest PDFs for this session
+  // Only show guest PDFs for this session, reconstruct blob URLs from base64
   const [guestPdfs, setGuestPdfs] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('guestPdfs');
         const all = stored ? JSON.parse(stored) : [];
-        return all.filter((p) => p.sessionId === sessionId);
+        return all
+          .filter((p) => p.sessionId === sessionId)
+          .map((p) => {
+            if (p.base64) {
+              try {
+                const arr = p.base64.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                  u8arr[n] = bstr.charCodeAt(n);
+                }
+                const blob = new Blob([u8arr], { type: mime });
+                const url = URL.createObjectURL(blob);
+                return { ...p, url };
+              } catch {
+                return p;
+              }
+            }
+            return p;
+          });
       } catch {
         return [];
       }
@@ -38,33 +59,36 @@ export default function Pdfs() {
 
   const handleUpload = async (file) => {
     if (isGuest) {
-      // Store guest uploads in local state and persist to localStorage, tagged with sessionId
-      const url = URL.createObjectURL(file);
-      setGuestPdfs((prev) => {
-        const newPdf = {
-          id: `${Date.now()}-${Math.random()}`,
-          title: file.name.replace(/\.pdf$/i, ''),
-          filename: file.name,
-          url,
-          sessionId,
-        };
-        // Save all guest PDFs in localStorage, but only show those for this session
-        let all = [];
-        try {
-          const stored = localStorage.getItem('guestPdfs');
-          all = stored ? JSON.parse(stored) : [];
-        } catch {}
-        const updatedAll = [...all, newPdf];
-        try {
-          localStorage.setItem('guestPdfs', JSON.stringify(updatedAll));
-        } catch {}
-        return [...prev, newPdf];
-      });
-      setToast({
-        type: 'success',
-        msg: 'Upload successful (guest session only)!',
-      });
-      setTimeout(() => setToast(null), 3000);
+      // Read file as base64 and persist in localStorage, tagged with sessionId
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result;
+        setGuestPdfs((prev) => {
+          const newPdf = {
+            id: `${Date.now()}-${Math.random()}`,
+            title: file.name.replace(/\.pdf$/i, ''),
+            filename: file.name,
+            base64,
+            sessionId,
+          };
+          let all = [];
+          try {
+            const stored = localStorage.getItem('guestPdfs');
+            all = stored ? JSON.parse(stored) : [];
+          } catch {}
+          const updatedAll = [...all, newPdf];
+          try {
+            localStorage.setItem('guestPdfs', JSON.stringify(updatedAll));
+          } catch {}
+          return [...prev, newPdf];
+        });
+        setToast({
+          type: 'success',
+          msg: 'Upload successful (guest session only)!',
+        });
+        setTimeout(() => setToast(null), 3000);
+      };
+      reader.readAsDataURL(file);
       return;
     }
     try {

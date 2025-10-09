@@ -1,10 +1,55 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjs from 'pdfjs-dist/build/pdf.mjs';
 import 'pdfjs-dist/web/pdf_viewer.css';
-// Use public folder for worker in Vite dev (copy node_modules/pdfjs-dist/build/pdf.worker.mjs to public/)
-// If you haven't already, copy the worker file:
-// cp node_modules/pdfjs-dist/build/pdf.worker.mjs public/pdf.worker.mjs
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+
+// --- PDF.js worker setup (Vite friendly) ---
+// In pdfjs-dist v4 the ESM worker can be bundled by importing its URL.
+// We attempt multiple strategies so guest PDFs render without manual copying.
+let workerConfigured = false;
+try {
+  // 1. Preferred: bundle worker via Vite using ?url so it is emitted as an asset.
+  // This import will be statically analyzed by Vite.
+  // eslint-disable-next-line import/no-unresolved
+  const workerSrc = require('pdfjs-dist/build/pdf.worker.mjs?url');
+  if (workerSrc && workerSrc.default) {
+    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc.default;
+    workerConfigured = true;
+  } else if (typeof workerSrc === 'string') {
+    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+    workerConfigured = true;
+  }
+} catch (e) {
+  // ignore and try dynamic import below
+}
+
+if (!workerConfigured) {
+  // 2. Dynamic import fallback (some bundler configs):
+  import('pdfjs-dist/build/pdf.worker.mjs?url')
+    .then((mod) => {
+      if (!workerConfigured) {
+        const candidate = mod.default || mod;
+        if (candidate) {
+          // eslint-disable-next-line no-console
+          console.log(
+            '[PdfViewer] Configured worker from dynamic import:',
+            candidate
+          );
+          pdfjs.GlobalWorkerOptions.workerSrc = candidate;
+          workerConfigured = true;
+        }
+      }
+    })
+    .catch(() => {
+      // 3. Last resort: legacy public path assumption (may 404 silently if missing)
+      if (!workerConfigured) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[PdfViewer] Falling back to /pdf.worker.mjs; consider bundling with ?url import'
+        );
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+      }
+    });
+}
 
 export default function PdfViewer({
   url,
@@ -18,17 +63,26 @@ export default function PdfViewer({
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef();
   const containerRef = useRef();
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    pdfjs.getDocument(url).promise.then((doc) => {
-      if (!isMounted) return;
-      setPdf(doc);
-      setNumPages(doc.numPages);
-      setLoading(false);
-      setPage(initialPage);
-    });
+    setLoadError(null);
+    pdfjs
+      .getDocument(url)
+      .promise.then((doc) => {
+        if (!isMounted) return;
+        setPdf(doc);
+        setNumPages(doc.numPages);
+        setLoading(false);
+        setPage(initialPage);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        setLoadError(err.message || 'Failed to load PDF');
+        setLoading(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -36,14 +90,19 @@ export default function PdfViewer({
 
   useEffect(() => {
     if (!pdf || !page) return;
-    pdf.getPage(page).then((p) => {
-      const viewport = p.getViewport({ scale: 1.5 });
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      p.render({ canvasContext: context, viewport });
-    });
+    pdf
+      .getPage(page)
+      .then((p) => {
+        const viewport = p.getViewport({ scale: 1.5 });
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        return p.render({ canvasContext: context, viewport }).promise;
+      })
+      .catch((err) => {
+        // Optionally, handle render errors here
+      });
     if (onPageChange) onPageChange(page);
   }, [pdf, page, onPageChange]);
 
@@ -59,7 +118,18 @@ export default function PdfViewer({
       className="flex flex-col items-center w-full max-w-full"
     >
       {loading && (
-        <div className="text-gray-500 animate-pulse">Loading PDF...</div>
+        <div className="text-gray-500 animate-pulse">
+          Loading PDF...
+          <br />
+          <span className="text-xs">{url}</span>
+        </div>
+      )}
+      {loadError && (
+        <div className="text-red-600 font-semibold mb-2">
+          PDF Error: {loadError}
+          <br />
+          <span className="text-xs break-all">URL: {url}</span>
+        </div>
       )}
       <canvas
         ref={canvasRef}
